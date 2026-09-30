@@ -1,0 +1,24 @@
+version: 1
+entries:
+  - path: tools/comfyui-music-video-models/install-models.ps1
+    kind: script
+    purpose: Downloads the model files required by the ComfyUI music-video workflow into a ComfyUI models directory using only relative paths.
+    inputs:
+      - current working directory must be the ComfyUI root containing models/
+      - optional --help switch via BAT launcher
+    outputs:
+      - models/diffusion_models/*
+      - models/text_encoders/*
+      - models/vae/*
+    dependencies:
+      - Windows PowerShell 5.1 or later
+      - curl.exe
+      - internet access
+  - path: tools/comfyui-music-video-models/install-models.bat
+    kind: launcher
+    purpose: Windows launcher for install-models.ps1.
+    dependencies:
+      - install-models.ps1
+  - path: tools/comfyui-music-video-models/README.md
+    kind: documentation
+    purpose: Usage, working-directory requirement, installed models, and workflow follow-up steps.
