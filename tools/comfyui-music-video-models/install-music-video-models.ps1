@@ -121,16 +121,30 @@ function Download-HuggingFaceModel {
         throw "Hugging Face CLI is installed but is not authenticated."
     }
 
-    & hf download $Repo $RemotePath --local-dir $Destination
-    if ($LASTEXITCODE -ne 0) {
-        throw "Authenticated Hugging Face download failed: $Name"
-    }
+    # Download to a temporary staging directory because hf --local-dir preserves
+    # the repository's subdirectory structure. Move only the requested model into
+    # ComfyUI's flat model-category directory after a successful download.
+    $StageRoot = Join-Path ".\models\.hf-stage" ([guid]::NewGuid().ToString("N"))
+    try {
+        $null = New-Item -ItemType Directory -Force -Path $StageRoot
+        & hf download $Repo $RemotePath --local-dir $StageRoot
+        if ($LASTEXITCODE -ne 0) {
+            throw "Authenticated Hugging Face download failed: $Name"
+        }
 
-    if (-not (Test-Path $Target -PathType Leaf)) {
-        throw "Hugging Face reported success but the expected file was not found: $Target"
-    }
+        $StageFile = Join-Path $StageRoot $RemotePath
+        if (-not (Test-Path $StageFile -PathType Leaf)) {
+            throw "Hugging Face reported success but the expected staged file was not found: $StageFile"
+        }
 
-    Write-Host "Finished: $Name"
+        Move-Item -Force -Path $StageFile -Destination $Target
+        Write-Host "Finished: $Name"
+    }
+    finally {
+        if (Test-Path $StageRoot) {
+            Remove-Item -Recurse -Force $StageRoot
+        }
+    }
 }
 
 Write-Host ""
