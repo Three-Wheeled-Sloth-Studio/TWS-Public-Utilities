@@ -61,11 +61,17 @@ function Download-Model {
     for ($Attempt = 1; $Attempt -le $MaxAttempts; $Attempt++) {
         Write-Host "Download attempt $Attempt of $MaxAttempts..."
 
-        & curl.exe -L --fail --retry 10 --retry-all-errors --retry-delay 5 --connect-timeout 30 --continue-at - --output $Target $Url
+        & curl.exe -L --fail --retry 10 --retry-connrefused --retry-delay 5 --connect-timeout 30 --continue-at - --output $Target $Url
 
         if ($LASTEXITCODE -eq 0) {
             Write-Host "Finished: $Name"
             return
+        }
+
+        # curl exit 22 means the server returned HTTP 4xx/5xx. Retrying the same
+        # unauthenticated request will not fix gated/auth failures such as 401.
+        if ($LASTEXITCODE -eq 22) {
+            throw "Server rejected the download for $Name. If this is a gated Hugging Face model, accept its license/access terms and use an authenticated download."
         }
 
         if ($Attempt -lt $MaxAttempts) {
