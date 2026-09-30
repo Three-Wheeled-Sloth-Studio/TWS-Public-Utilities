@@ -1,5 +1,4 @@
 param(
-    [Alias("help")]
     [switch]$Help
 )
 
