@@ -107,20 +107,39 @@ function Ensure-HuggingFaceCli {
         throw "Automatic installation of huggingface_hub failed."
     }
 
-    # User-level Python Scripts is not always added to the current process PATH.
+    # pip --user installs console scripts beside the user site-packages tree.
+    # Python's reported user-base is not reliable for every Windows Python layout,
+    # so derive the Scripts directory from the actual user-site path first.
+    $CandidateScriptDirs = @()
+
+    $UserSite = (& $Python.Source -m site --user-site).Trim()
+    if ($LASTEXITCODE -eq 0 -and $UserSite) {
+        $CandidateScriptDirs += (Join-Path (Split-Path $UserSite -Parent) "Scripts")
+    }
+
     $UserBase = (& $Python.Source -m site --user-base).Trim()
     if ($LASTEXITCODE -eq 0 -and $UserBase) {
-        $UserScripts = Join-Path $UserBase "Scripts"
-        if ((Test-Path $UserScripts -PathType Container) -and (($env:PATH -split ';') -notcontains $UserScripts)) {
-            $env:PATH = "$UserScripts;$env:PATH"
+        $CandidateScriptDirs += (Join-Path $UserBase "Scripts")
+    }
+
+    # Also inspect the current user's standard roaming Python Scripts locations.
+    $CandidateScriptDirs += Get-ChildItem -Path (Join-Path $env:APPDATA "Python") -Directory -ErrorAction SilentlyContinue |
+        ForEach-Object { Join-Path $_.FullName "Scripts" }
+
+    foreach ($ScriptsDir in ($CandidateScriptDirs | Select-Object -Unique)) {
+        if (Test-Path (Join-Path $ScriptsDir "hf.exe") -PathType Leaf) {
+            if (($env:PATH -split ';') -notcontains $ScriptsDir) {
+                $env:PATH = "$ScriptsDir;$env:PATH"
+            }
+            break
         }
     }
 
     if (-not (Get-Command hf -ErrorAction SilentlyContinue)) {
-        throw "huggingface_hub installed, but the 'hf' command is not available in this session. Close and reopen PowerShell, then rerun the installer."
+        throw "huggingface_hub installed successfully, but hf.exe could not be located automatically."
     }
 
-    Write-Host "Hugging Face CLI installed."
+    Write-Host "Hugging Face CLI installed and available in this session."
 }
 
 function Download-HuggingFaceModel {
