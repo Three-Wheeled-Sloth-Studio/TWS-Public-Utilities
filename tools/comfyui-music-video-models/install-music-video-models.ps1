@@ -85,6 +85,44 @@ function Download-Model {
     throw "Download failed after $MaxAttempts attempts: $Name"
 }
 
+function Ensure-HuggingFaceCli {
+    if (Get-Command hf -ErrorAction SilentlyContinue) {
+        return
+    }
+
+    Write-Host ""
+    Write-Host "Hugging Face CLI is required for gated LTX 2.5 models and was not found."
+    Write-Host "Installing/upgrading huggingface_hub for the current Windows user..."
+
+    $Python = Get-Command py.exe -ErrorAction SilentlyContinue
+    if (-not $Python) { $Python = Get-Command python.exe -ErrorAction SilentlyContinue }
+    if (-not $Python) { $Python = Get-Command python -ErrorAction SilentlyContinue }
+
+    if (-not $Python) {
+        throw "Python was not found on PATH. Install Python 3, then rerun this installer."
+    }
+
+    & $Python.Source -m pip install --user --upgrade "huggingface_hub"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Automatic installation of huggingface_hub failed."
+    }
+
+    # User-level Python Scripts is not always added to the current process PATH.
+    $UserBase = (& $Python.Source -m site --user-base).Trim()
+    if ($LASTEXITCODE -eq 0 -and $UserBase) {
+        $UserScripts = Join-Path $UserBase "Scripts"
+        if ((Test-Path $UserScripts -PathType Container) -and (($env:PATH -split ';') -notcontains $UserScripts)) {
+            $env:PATH = "$UserScripts;$env:PATH"
+        }
+    }
+
+    if (-not (Get-Command hf -ErrorAction SilentlyContinue)) {
+        throw "huggingface_hub installed, but the 'hf' command is not available in this session. Close and reopen PowerShell, then rerun the installer."
+    }
+
+    Write-Host "Hugging Face CLI installed."
+}
+
 function Download-HuggingFaceModel {
     param(
         [Parameter(Mandatory=$true)][string]$Repo,
@@ -92,15 +130,7 @@ function Download-HuggingFaceModel {
         [Parameter(Mandatory=$true)][string]$Destination
     )
 
-    if (-not (Get-Command hf.exe -ErrorAction SilentlyContinue) -and -not (Get-Command hf -ErrorAction SilentlyContinue)) {
-        Write-Host ""
-        Write-Host "LTX 2.5 requires authenticated Hugging Face access."
-        Write-Host "Install the Hugging Face CLI, then authenticate this machine once:"
-        Write-Host "  pip install -U huggingface_hub"
-        Write-Host "  hf auth login"
-        Write-Host ""
-        throw "Hugging Face CLI ('hf') was not found on PATH."
-    }
+    Ensure-HuggingFaceCli
 
     $Name = Split-Path $RemotePath -Leaf
     $Target = Join-Path $Destination $Name
@@ -115,10 +145,16 @@ function Download-HuggingFaceModel {
     & hf auth whoami
     if ($LASTEXITCODE -ne 0) {
         Write-Host ""
-        Write-Host "Authenticate this machine with:"
-        Write-Host "  hf auth login"
-        Write-Host ""
-        throw "Hugging Face CLI is installed but is not authenticated."
+        Write-Host "This machine is not authenticated to Hugging Face."
+        Write-Host "Starting Hugging Face login now..."
+        & hf auth login
+        if ($LASTEXITCODE -ne 0) {
+            throw "Hugging Face authentication failed."
+        }
+        & hf auth whoami
+        if ($LASTEXITCODE -ne 0) {
+            throw "Hugging Face login completed but no authenticated account is available."
+        }
     }
 
     # Download to a temporary staging directory because hf --local-dir preserves
