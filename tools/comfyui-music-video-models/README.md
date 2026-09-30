@@ -44,6 +44,12 @@ Generated workflows are written relative to the ComfyUI root:
 
 The source copy is overwritten from upstream on each setup run. The local copy is regenerated from that source, so the operation is repeatable and never edits the upstream workflow in place.
 
+## Restart ComfyUI after setup
+
+After the setup completes, fully exit and restart ComfyUI Desktop, including its backend process, before loading the generated local workflow. ComfyUI builds its available-model lists when the backend starts, so models installed while ComfyUI is already running can continue to appear as missing until the backend restarts.
+
+The utility intentionally does not force-close or restart ComfyUI because doing so could interrupt an active generation or other unsaved/in-progress work.
+
 ## Model-installer-only command
 
 
