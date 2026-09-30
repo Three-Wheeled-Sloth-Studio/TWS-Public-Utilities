@@ -37,29 +37,14 @@ path\to\TWS-Public-Utilities\tools\comfyui-music-video-models\install-music-vide
 - Windows
 - PowerShell 5.1 or later
 - `curl.exe`
-- Hugging Face CLI command `hf` for gated LTX 2.5 models
+- Python 3 for automatic Hugging Face CLI bootstrap
 - sufficient disk space
 - internet access to Hugging Face
 
-Install the Hugging Face CLI if needed:
+The installer checks for the Hugging Face CLI automatically. If it is missing, it installs/upgrades `huggingface_hub` for the current Windows user using Python/pip and updates PATH for the current installer process.
 
-```powershell
-pip install -U huggingface_hub
-```
+LTX 2.5 is gated. If the CLI is not already authenticated, the installer starts `hf auth login` automatically. Complete the Hugging Face login using the account that has been granted LTX 2.5 access. Credentials remain in Hugging Face's local credential storage and are never written to this repository or installer.
 
-LTX 2.5 is gated. After your Hugging Face account has been granted model access, authenticate this machine once:
-
-```powershell
-hf auth login
-```
-
-Current Hugging Face CLI versions support browser/device login. The credential is stored by Hugging Face locally; this repository and installer do not store your token.
-
-You can verify the active account with:
-
-```powershell
-hf auth whoami
-```
 
 ## Models installed
 
