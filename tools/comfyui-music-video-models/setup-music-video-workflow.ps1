@@ -88,3 +88,13 @@ Write-Host "Local copy:   $PatchedPath"
 Write-Host ""
 Write-Host "Setup complete. Load the local copy in ComfyUI:"
 Write-Host "  $PatchedPath"
+
+$Diagnostic = Join-Path $ToolDir "diagnose-comfyui-model-paths.ps1"
+if (Test-Path $Diagnostic -PathType Leaf) {
+    Write-Host ""
+    Write-Host "Running ComfyUI model-path diagnostic..."
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Diagnostic
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning "Model-path diagnostic reported a problem (exit $LASTEXITCODE)."
+    }
+}
