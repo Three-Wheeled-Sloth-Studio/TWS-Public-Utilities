@@ -50,10 +50,9 @@ function Download-Model {
 
     if (Test-Path $Target) {
         $Size = (Get-Item $Target).Length
-        if ($Size -gt 1MB) {
-            Write-Host "Already exists - skipping."
-            return
-        }
+        $ExistingGB = [math]::Round($Size / 1GB, 2)
+        Write-Host "Existing file found: $ExistingGB GB."
+        Write-Host "Verifying completion with the remote server; partial files will resume."
     }
 
     # Large Hugging Face files can occasionally lose a TLS connection mid-transfer.
