@@ -29,7 +29,7 @@ Do not run it from this repository folder unless this repository itself has been
 From the intended ComfyUI root:
 
 ```bat
-path\to\TWS-Public-Utilities\tools\comfyui-music-video-models\install-models.bat
+path\to\TWS-Public-Utilities\tools\comfyui-music-video-models\install-music-video-models.bat
 ```
 
 The launcher preserves your current working directory and invokes the PowerShell script from the repository path.
@@ -37,7 +37,7 @@ The launcher preserves your current working directory and invokes the PowerShell
 To display help without downloading:
 
 ```bat
-path\to\TWS-Public-Utilities\tools\comfyui-music-video-models\install-models.bat --help
+path\to\TWS-Public-Utilities\tools\comfyui-music-video-models\install-music-video-models.bat --help
 ```
 
 ## Prerequisites
