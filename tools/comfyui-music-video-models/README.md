@@ -68,7 +68,7 @@ path\to\TWS-Public-Utilities\tools\comfyui-music-video-models\install-music-vide
 - sufficient disk space
 - internet access to Hugging Face
 
-The installer checks for the Hugging Face CLI automatically. If it is missing, it installs/upgrades `huggingface_hub` for the current Windows user using Python/pip and updates PATH for the current installer process.
+The installer checks for the Hugging Face CLI automatically, including user-level Windows Python Scripts directories that may not be on PATH. If `hf.exe` is already installed there, it is reused without running pip again. If it is genuinely missing, the installer installs `huggingface_hub` for the current Windows user using Python/pip and updates PATH for the current installer process.
 
 LTX 2.5 is gated. If the CLI is not already authenticated, the installer starts `hf auth login` automatically. Complete the Hugging Face login using the account that has been granted LTX 2.5 access. Credentials remain in Hugging Face's local credential storage and are never written to this repository or installer.
 
@@ -90,7 +90,8 @@ LTX 2.5:
 
 - Public Z-Image downloads use curl with resume and transient-network retry support.
 - Existing public files are remotely checked so partial files can resume.
-- Gated LTX downloads use the authenticated Hugging Face CLI.
+- Existing LTX destination files larger than 1 MB are treated as installed and are not downloaded again.
+- Missing gated LTX downloads use the authenticated Hugging Face CLI.
 - LTX downloads are staged temporarily and then moved into the exact ComfyUI model directory.
 - Authentication credentials are never written to this repository or the installer.
 - Permanent HTTP/authentication failures fail fast.
