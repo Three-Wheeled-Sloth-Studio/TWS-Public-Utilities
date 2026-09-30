@@ -1,0 +1,8 @@
+version: 1
+commands:
+  repository:
+    - description: Check PowerShell syntax for tool scripts
+      command: powershell -NoProfile -Command "Get-ChildItem -Recurse -Filter *.ps1 | ForEach-Object { [void][scriptblock]::Create((Get-Content -Raw $_.FullName)); Write-Host ('OK ' + $_.FullName) }"
+  comfyui_music_video_models:
+    - description: Show tool help without downloading
+      command: tools\comfyui-music-video-models\install-models.bat --help
