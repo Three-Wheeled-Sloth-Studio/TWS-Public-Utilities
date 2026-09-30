@@ -85,6 +85,54 @@ function Download-Model {
     throw "Download failed after $MaxAttempts attempts: $Name"
 }
 
+function Download-HuggingFaceModel {
+    param(
+        [Parameter(Mandatory=$true)][string]$Repo,
+        [Parameter(Mandatory=$true)][string]$RemotePath,
+        [Parameter(Mandatory=$true)][string]$Destination
+    )
+
+    if (-not (Get-Command hf.exe -ErrorAction SilentlyContinue) -and -not (Get-Command hf -ErrorAction SilentlyContinue)) {
+        Write-Host ""
+        Write-Host "LTX 2.5 requires authenticated Hugging Face access."
+        Write-Host "Install the Hugging Face CLI, then authenticate this machine once:"
+        Write-Host "  pip install -U huggingface_hub"
+        Write-Host "  hf auth login"
+        Write-Host ""
+        throw "Hugging Face CLI ('hf') was not found on PATH."
+    }
+
+    $Name = Split-Path $RemotePath -Leaf
+    $Target = Join-Path $Destination $Name
+
+    Write-Host ""
+    Write-Host "============================================================"
+    Write-Host "Model: $Name"
+    Write-Host "Destination: $Target"
+    Write-Host "Source: $Repo/$RemotePath"
+    Write-Host "============================================================"
+
+    & hf auth whoami
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ""
+        Write-Host "Authenticate this machine with:"
+        Write-Host "  hf auth login"
+        Write-Host ""
+        throw "Hugging Face CLI is installed but is not authenticated."
+    }
+
+    & hf download $Repo $RemotePath --local-dir $Destination
+    if ($LASTEXITCODE -ne 0) {
+        throw "Authenticated Hugging Face download failed: $Name"
+    }
+
+    if (-not (Test-Path $Target -PathType Leaf)) {
+        throw "Hugging Face reported success but the expected file was not found: $Target"
+    }
+
+    Write-Host "Finished: $Name"
+}
+
 Write-Host ""
 Write-Host "ComfyUI root: $(Get-Location)"
 Write-Host "Models root:  $Models"
@@ -94,10 +142,10 @@ Write-Host "Downloading music-video models..."
 Download-Model -Name "z_image_turbo_bf16.safetensors" -Url "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors?download=true" -Destination $Diffusion
 Download-Model -Name "qwen_3_4b.safetensors" -Url "https://huggingface.co/Comfy-Org/z_image/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors?download=true" -Destination $TextEnc
 Download-Model -Name "ae.safetensors" -Url "https://huggingface.co/Comfy-Org/z_image/resolve/main/split_files/vae/ae.safetensors?download=true" -Destination $VAE
-Download-Model -Name "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors" -Url "https://huggingface.co/Lightricks/LTX-2.5/resolve/main/diffusion_models/ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors?download=true" -Destination $Diffusion
-Download-Model -Name "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors" -Url "https://huggingface.co/Lightricks/LTX-2.5/resolve/main/text_encoders/gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors?download=true" -Destination $TextEnc
-Download-Model -Name "ltx-2.5-video-vae-bf16.safetensors" -Url "https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-video-vae-bf16.safetensors?download=true" -Destination $VAE
-Download-Model -Name "ltx-2.5-audio-vae-bf16.safetensors" -Url "https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-audio-vae-bf16.safetensors?download=true" -Destination $VAE
+Download-HuggingFaceModel -Repo "Lightricks/LTX-2.5" -RemotePath "diffusion_models/ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors" -Destination $Diffusion
+Download-HuggingFaceModel -Repo "Lightricks/LTX-2.5" -RemotePath "text_encoders/gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors" -Destination $TextEnc
+Download-HuggingFaceModel -Repo "Lightricks/LTX-2.5" -RemotePath "vae/ltx-2.5-video-vae-bf16.safetensors" -Destination $VAE
+Download-HuggingFaceModel -Repo "Lightricks/LTX-2.5" -RemotePath "vae/ltx-2.5-audio-vae-bf16.safetensors" -Destination $VAE
 
 Write-Host ""
 Write-Host "Downloads complete."
