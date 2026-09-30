@@ -24,3 +24,20 @@ entries:
   - path: tools/comfyui-music-video-models/README.md
     kind: documentation
     purpose: Usage, working-directory requirement, authentication setup, installed models, and download behavior.
+  - path: tools/comfyui-music-video-models/setup-music-video-workflow.ps1
+    kind: script
+    purpose: End-to-end setup that verifies models, fetches the canonical upstream workflow, preserves it, creates a local compatible copy, applies known legacy filename substitutions, and validates required models.
+    inputs:
+      - current working directory must be the ComfyUI root containing models/
+      - canonical GeekatplayStudio music_video_ALL_IN_ONE.json
+    outputs:
+      - user/default/workflows/tws-music-video/music_video_ALL_IN_ONE.upstream.json
+      - user/default/workflows/tws-music-video/music_video_ALL_IN_ONE.local.json
+    dependencies:
+      - install-music-video-models.ps1
+      - curl.exe
+  - path: tools/comfyui-music-video-models/setup-music-video-workflow.bat
+    kind: launcher
+    purpose: Preferred Windows one-command launcher for music-video workflow setup.
+    dependencies:
+      - setup-music-video-workflow.ps1
