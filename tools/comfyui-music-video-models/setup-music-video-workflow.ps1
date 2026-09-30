@@ -88,6 +88,10 @@ Write-Host "Local copy:   $PatchedPath"
 Write-Host ""
 Write-Host "Setup complete. Load the local copy in ComfyUI:"
 Write-Host "  $PatchedPath"
+Write-Host ""
+Write-Host "IMPORTANT: Fully restart ComfyUI Desktop/backend before loading the workflow."
+Write-Host "ComfyUI builds its model lists when the backend starts; newly installed models may appear missing until restart."
+Write-Host "This utility does not force a restart so it cannot terminate unrelated/in-progress ComfyUI work."
 
 $Diagnostic = Join-Path $ToolDir "diagnose-comfyui-model-paths.ps1"
 if (Test-Path $Diagnostic -PathType Leaf) {
