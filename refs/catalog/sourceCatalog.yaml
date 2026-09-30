@@ -2,10 +2,11 @@ version: 1
 entries:
   - path: tools/comfyui-music-video-models/install-music-video-models.ps1
     kind: script
-    purpose: Downloads the model files required by the ComfyUI music-video workflow into a ComfyUI models directory using only relative paths.
+    purpose: Downloads public Z-Image and authenticated gated LTX 2.5 model files into the required ComfyUI model directories.
     inputs:
       - current working directory must be the ComfyUI root containing models/
       - optional --help switch via BAT launcher
+      - locally stored Hugging Face authentication for gated LTX 2.5 downloads
     outputs:
       - models/diffusion_models/*
       - models/text_encoders/*
@@ -13,6 +14,7 @@ entries:
     dependencies:
       - Windows PowerShell 5.1 or later
       - curl.exe
+      - Hugging Face CLI command hf
       - internet access
   - path: tools/comfyui-music-video-models/install-music-video-models.bat
     kind: launcher
@@ -21,4 +23,4 @@ entries:
       - install-music-video-models.ps1
   - path: tools/comfyui-music-video-models/README.md
     kind: documentation
-    purpose: Usage, working-directory requirement, installed models, and workflow follow-up steps.
+    purpose: Usage, working-directory requirement, authentication setup, installed models, and download behavior.
