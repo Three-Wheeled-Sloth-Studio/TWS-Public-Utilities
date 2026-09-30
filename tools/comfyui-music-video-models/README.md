@@ -18,7 +18,34 @@ ComfyUI/
 
 The script uses the current ComfyUI root and writes model files under `.\models\`.
 
-## How to run
+## Preferred one-command setup
+
+From the ComfyUI root, run:
+
+```bat
+path\to\TWS-Public-Utilities\tools\comfyui-music-video-models\setup-music-video-workflow.bat
+```
+
+This command:
+
+1. installs or verifies the required models,
+2. fetches the current canonical `GeekatplayStudio/ComfyUI-Music-to-Video` flagship workflow,
+3. preserves an untouched upstream copy,
+4. creates a separate local copy,
+5. applies known legacy `control` to `convrot` filename substitutions only when they are present, and
+6. validates the seven required local model files.
+
+Generated workflows are written relative to the ComfyUI root:
+
+```text
+.\user\default\workflows\tws-music-video\music_video_ALL_IN_ONE.upstream.json
+.\user\default\workflows\tws-music-video\music_video_ALL_IN_ONE.local.json
+```
+
+The source copy is overwritten from upstream on each setup run. The local copy is regenerated from that source, so the operation is repeatable and never edits the upstream workflow in place.
+
+## Model-installer-only command
+
 
 From the intended ComfyUI root:
 
