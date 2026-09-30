@@ -56,13 +56,28 @@ function Download-Model {
         }
     }
 
-    & curl.exe -L --fail --retry 5 --retry-delay 5 --continue-at - --output $Target $Url
+    # Large Hugging Face files can occasionally lose a TLS connection mid-transfer.
+    # Retry the curl invocation so --continue-at - resumes the partial file.
+    $MaxAttempts = 10
+    for ($Attempt = 1; $Attempt -le $MaxAttempts; $Attempt++) {
+        Write-Host "Download attempt $Attempt of $MaxAttempts..."
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "Download failed: $Name"
+        & curl.exe -L --fail --retry 10 --retry-all-errors --retry-delay 5 --connect-timeout 30 --continue-at - --output $Target $Url
+
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Finished: $Name"
+            return
+        }
+
+        if ($Attempt -lt $MaxAttempts) {
+            $PartialSize = if (Test-Path $Target) { (Get-Item $Target).Length } else { 0 }
+            $PartialGB = [math]::Round($PartialSize / 1GB, 2)
+            Write-Warning "Transfer interrupted. Partial file is $PartialGB GB. Retrying in 10 seconds and resuming from the existing file..."
+            Start-Sleep -Seconds 10
+        }
     }
 
-    Write-Host "Finished: $Name"
+    throw "Download failed after $MaxAttempts attempts: $Name"
 }
 
 Write-Host ""
