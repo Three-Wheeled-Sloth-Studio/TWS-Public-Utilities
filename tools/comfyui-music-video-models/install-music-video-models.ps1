@@ -90,9 +90,20 @@ function Ensure-HuggingFaceCli {
         return
     }
 
+    # hf.exe may already be installed by pip --user but absent from inherited PATH.
+    $RoamingPython = Join-Path $env:APPDATA "Python"
+    $ExistingHf = Get-ChildItem -Path $RoamingPython -Filter "hf.exe" -File -Recurse -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($ExistingHf) {
+        $ScriptsDir = Split-Path -Parent $ExistingHf.FullName
+        $env:PATH = "$ScriptsDir;$env:PATH"
+        Write-Host "Found existing Hugging Face CLI: $($ExistingHf.FullName)"
+        return
+    }
+
     Write-Host ""
     Write-Host "Hugging Face CLI is required for gated LTX 2.5 models and was not found."
-    Write-Host "Installing/upgrading huggingface_hub for the current Windows user..."
+    Write-Host "Installing huggingface_hub for the current Windows user..."
 
     $Python = Get-Command py.exe -ErrorAction SilentlyContinue
     if (-not $Python) { $Python = Get-Command python.exe -ErrorAction SilentlyContinue }
@@ -102,7 +113,7 @@ function Ensure-HuggingFaceCli {
         throw "Python was not found on PATH. Install Python 3, then rerun this installer."
     }
 
-    & $Python.Source -m pip install --user --upgrade "huggingface_hub"
+    & $Python.Source -m pip install --user "huggingface_hub"
     if ($LASTEXITCODE -ne 0) {
         throw "Automatic installation of huggingface_hub failed."
     }
@@ -160,6 +171,17 @@ function Download-HuggingFaceModel {
     Write-Host "Destination: $Target"
     Write-Host "Source: $Repo/$RemotePath"
     Write-Host "============================================================"
+
+    if (Test-Path $Target -PathType Leaf) {
+        $Size = (Get-Item $Target).Length
+        if ($Size -gt 1MB) {
+            $ExistingGB = [math]::Round($Size / 1GB, 2)
+            Write-Host "Existing LTX model found: $ExistingGB GB. Skipping download."
+            return
+        }
+        Write-Warning "Existing LTX file is suspiciously small and will be replaced: $Target"
+        Remove-Item -Force $Target
+    }
 
     & hf auth whoami
     if ($LASTEXITCODE -ne 0) {
